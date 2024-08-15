@@ -3,25 +3,28 @@ var express = require('express');
 var path = require('path');
 var app = express();
 
+var fs = require('fs');
+
 const PORT = 8080;
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 })
 
-app.get('/:filename', (req, res) => {
-    const filePath = path.join(__dirname, req.params.filename + '.html');
-    res.sendFile(filePath, (err) => {
-        if (err) {
-            res.status(404).sendFile(path.join(__dirname, '404.html'));
-        }
-    });
+app.get('/:filename', (req, res, next) => {
+    const filename = req.params.filename;
+    if (filename == 'index') return next(); // Pass to next middleware (404)
+
+    const filePath = path.join(__dirname, filename + '.html');
+    if (fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (err) return next();
+        else res.sendFile(filePath);
+    }));
 });
 
-// Catch-all route to handle any undefined routes
-app.get('*', (req, res) => {
+app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, '404.html'));
-});
+})
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}/`);
