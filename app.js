@@ -7,13 +7,18 @@ var fs = require('fs');
 
 const PORT = 8080;
 
+// Serve static files in public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Default root page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 })
 
+// Dynamic routing - send to 404 middleware if filename is index or not existing
 app.get('/:filename', (req, res, next) => {
     const filename = req.params.filename;
-    if (filename == 'index') return next(); // Pass to next middleware (404)
+    if (filename == 'index') return next();
 
     const filePath = path.join(__dirname, filename + '.html');
     if (fs.access(filePath, fs.constants.F_OK, (err) => {
